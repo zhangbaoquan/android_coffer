@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/b0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:elevation="3dp"
+            android:text="SQLite数据库操作练习"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="RxJava 练习"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="IM 样式"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="展示本地图片与视频"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="OpenGL Demo"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="Kotlin 协程"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="Jetpack 组件"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:text="地图"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:elevation="3dp"
+            android:text="greendao数据库"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/b9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/button_selector"
+            android:elevation="3dp"
+            android:text="约束布局使用"
+            android:textColor="@color/white"
+            tools:ignore="HardcodedText" />
+
+
+    </LinearLayout>
+
+</ScrollView>

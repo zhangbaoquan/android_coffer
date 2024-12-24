@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/deviceRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false">
+    <!-- 若是clipChildren==true，那么将会裁剪子布局，方式是通过裁剪Canvas。
+    若是clipChildren==false，那么将不会裁剪Canvas。-->
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
