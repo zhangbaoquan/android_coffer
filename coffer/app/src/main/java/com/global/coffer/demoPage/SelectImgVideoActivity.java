@@ -54,6 +54,8 @@ public class SelectImgVideoActivity extends AppCompatActivity {
     String str1 = "https://willand-s3-public-china.s3.cn-north-1.amazonaws.com.cn/ICON/car.png";
     String str2 = "https://willand-s3-public-china.s3.cn-north-1.amazonaws.com.cn/Test/video(19).mp4";
 
+    String str3 = "content://media/external/video/media/1000037347";
+
     private ImageView imageView1;
     private ImageView imageView2;
     private ImageView imageView3;
@@ -71,20 +73,25 @@ public class SelectImgVideoActivity extends AppCompatActivity {
         imageView2 = findViewById(R.id.img2);
         imageView3 = findViewById(R.id.img3);
 
-        Glide.with(this).load(str1).into(imageView3);
+        Glide.with(this).load(str2).into(imageView3);
         imageView3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 //                imageDate.setFileName(result.get(0).getFileName());
-                imageDate.setMimeType("image");
-                imageDate.setPath(str1);
+//                imageDate.setMimeType("image");
+//                imageDate.setPath(str1);
+                imageDate.setMimeType("video/mp4");
+                imageDate.setPath(str2);
 //                imageDate.setRealPath(result.get(0).getRealPath());
                 data.clear();
                 data.add(imageDate);
                 PictureSelector.create(SelectImgVideoActivity.this)
                         .openPreview()
                         .setImageEngine(GlideEngine.createGlideEngine())
-                        .isHidePreviewDownload(false)
+                        .setVideoPlayerEngine(new MediaPlayerEngine())
+//                        .isHidePreviewDownload(true)
+                        .isVideoPauseResumePlay(true)
+                        .isAutoVideoPlay(true)
                         .startActivityPreview(0, false, data);
             }
         });
@@ -225,44 +232,13 @@ public class SelectImgVideoActivity extends AppCompatActivity {
         findViewById(R.id.b3).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloadFile(str1);
+                downloadFile(str2);
 //                downloadTest(str1);
             }
         });
 
 
     }
-
-    private void downloadTest(String url){
-        String mineType;
-        String extension;
-        if(url.contains(".png")){
-            mineType = "image";
-            extension = ".jpg";
-        } else {
-            mineType = "video";
-            extension = ".mp4";
-        }
-       String path = "file_" + System.currentTimeMillis() + extension;
-        DownloadFileUtils.saveLocalFile(SelectImgVideoActivity.this, path, mineType, new OnCallbackListener<String>() {
-            @Override
-            public void onCall(String realPath) {
-                if (TextUtils.isEmpty(realPath)) {
-                    String errorMsg;
-                    if (PictureMimeType.isHasVideo(mineType)) {
-                        errorMsg = "视频保存失败";
-                    } else {
-                        errorMsg = "图片保存失败";
-                    }
-//                    ToastUtils.showToast(getContext(), errorMsg);
-                } else {
-                    new PictureMediaScannerConnection(SelectImgVideoActivity.this, realPath);
-//                    ToastUtils.showToast(getContext(), "文件保存成功至" + "\n" + realPath);
-                }
-            }
-        });
-    }
-
     private void downloadFile(String url){
         Glide.with(this).asFile().load(url).listener(new RequestListener<File>() {
             @Override
