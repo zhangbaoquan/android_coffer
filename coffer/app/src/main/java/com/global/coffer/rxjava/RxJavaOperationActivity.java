@@ -23,6 +23,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -35,7 +36,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * 1、当上游发送了一个onComplete后, 上游onComplete之后的事件将会继续发送, 而下游收到onComplete事件之后将不再继续接收事件.
  * 2、当上游发送了一个onError后, 上游onError之后的事件将继续发送, 而下游收到onError事件之后将不再继续接收事件.
  * 3、上游可以不发送onComplete或onError.
- * 最为关键的是onComplete和onError必须唯一并且互斥, 即不能发多个onComplete, 也不能发多个onError, 也不能先发一个onComplete, 然后再发一个onError, 反之亦然
+ * 最为关键的是onComplete和onError必须唯一并且互斥, 即不能发多个onComplete, 也不能发多个onError,
+ * 也不能先发一个onComplete, 然后再发一个onError, 反之亦然
  * 4、Disposable, 这个单词的字面意思是一次性用品,用完即可丢弃的。调用dispose()并不会导致上游不再继续发送事件, 上游会继续发送剩余的事件.
  * 5、不带任何参数的subscribe() 表示下游不关心任何事件,你上游尽管发你的数据去吧, 老子可不管你发什么.
  * 6、带有一个Consumer参数的方法表示下游只关心onNext事件, 其他的事件我假装没看见
@@ -54,9 +56,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * 11、通过Map, 可以将上游发来的事件转换为任意的类型, 可以是一个Object, 也可以是一个集合
  * 12、FlatMap将一个发送事件的上游Observable变换为多个发送事件的Observables，然后将它们发射的事件合并后放进一个单独的Observable里.
  * 13、flatMap并不保证事件的顺序,如果需要保证顺序则需要使用concatMap.
- * 14、
- * 15、
- * 16、
+ * 14、使用flatMap 可以解决接口嵌套问题，例如在请求注册接口完成后，在请求登录接口
+ * 15、Zip通过一个函数将多个Observable发送的事件结合到一起，然后发送这些组合到一起的事件.
+ *  * 它按照严格的顺序应用这个函数。它只发射与发射数据项最少的那个Observable一样多的数据
+ * 16、Zip 可以实现从两个服务器接口中获取数据, 而只有当两个都获取到了之后才能进行展示, 这个时候就可以用Zip了
  * 17、
  * 18、
  * 19、
@@ -71,6 +74,16 @@ public class RxJavaOperationActivity extends AppCompatActivity {
     private TextView mTextView1;
 
     private String desc = "";
+
+    String baseUrl = "https://www.wanandroid.com/";
+
+    Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .build();
+
+    IwanandroidApi iwanandroidApi = retrofit.create(IwanandroidApi.class);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,15 +102,20 @@ public class RxJavaOperationActivity extends AppCompatActivity {
             public void onClick(View v) {
 //                test7();
 //                test8();
-                test12();
+//                test12();
+                test15();
             }
         });
 //        test9();
 //        test10();
 //        test11();
-        test13();
-        test14();
-        test15();
+//        test13();
+//        test14();
+        test16();
+        test17();
+        test18();
+        test19();
+        test20();
 
     }
 
@@ -331,15 +349,6 @@ public class RxJavaOperationActivity extends AppCompatActivity {
 
     //进行网络请求
     private void test7() {
-        String baseUrl = "https://www.wanandroid.com/banner/json/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
-
-        IwanandroidApi iwanandroidApi = retrofit.create(IwanandroidApi.class);
         iwanandroidApi.getBannerInfo()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -373,15 +382,6 @@ public class RxJavaOperationActivity extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     private void test8() {
-        String baseUrl = "https://www.wanandroid.com/banner/json/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
-
-        IwanandroidApi iwanandroidApi = retrofit.create(IwanandroidApi.class);
         iwanandroidApi.getBannerInfo()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -481,15 +481,6 @@ public class RxJavaOperationActivity extends AppCompatActivity {
     @SuppressLint("CheckResult")
     private void test12() {
 //        String baseUrl = "https://www.wanandroid.com/banner/json/";
-        String baseUrl = "https://www.wanandroid.com/";
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build();
-
-        IwanandroidApi iwanandroidApi = retrofit.create(IwanandroidApi.class);
         iwanandroidApi.getBannerInfo()  // 发起获取Banner信息请求
                 .subscribeOn(Schedulers.io()) // 在IO线程进行网络请求
                 .observeOn(AndroidSchedulers.mainThread()) // 回到主线程去处理请求结果
@@ -526,20 +517,175 @@ public class RxJavaOperationActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * 下面的Demo 是 第一个水管发完了消息，然后再发第二个水管里的数据，因为这两个都在同一个线程里，因此会有先后顺序
+     */
     @SuppressLint("CheckResult")
     private void test13() {
+        Observable<Integer> observable1 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+                Log.d(TAG, "emit 4");
+                emitter.onNext(4);
+                Log.d(TAG, "emit complete1");
+                emitter.onComplete();
+            }
+        });
 
+        Observable<String> observable2 = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                Log.d(TAG, "emit A");
+                emitter.onNext("A");
+                Log.d(TAG, "emit B");
+                emitter.onNext("B");
+                Log.d(TAG, "emit C");
+                emitter.onNext("C");
+                Log.d(TAG, "emit complete2");
+                emitter.onComplete();
+            }
+        });
+
+        Observable.zip(observable1, observable2, new BiFunction<Integer, String, String>() {
+            @Override
+            public String apply(Integer integer, String s) throws Exception {
+                return integer + s;
+            }
+        }).subscribe(new Observer<String>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "onSubscribe");
+            }
+
+            @Override
+            public void onNext(String value) {
+                Log.d(TAG, "onNext: " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete");
+            }
+        });
     }
 
+    /**
+     * 下面是将两个发布水管放在各自独立的IO线程中
+     */
     @SuppressLint("CheckResult")
     private void test14() {
+        Observable<Integer> observable1 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+                Log.d(TAG, "emit 4");
+                emitter.onNext(4);
+                Log.d(TAG, "emit complete1");
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
 
+        Observable<String> observable2 = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                Log.d(TAG, "emit A");
+                emitter.onNext("A");
+                Log.d(TAG, "emit B");
+                emitter.onNext("B");
+                Log.d(TAG, "emit C");
+                emitter.onNext("C");
+                Log.d(TAG, "emit complete2");
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+
+        Observable.zip(observable1, observable2, new BiFunction<Integer, String, String>() {
+            @Override
+            public String apply(Integer integer, String s) throws Exception {
+                return integer + s;
+            }
+        }).subscribe(new Observer<String>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "onSubscribe");
+            }
+
+            @Override
+            public void onNext(String value) {
+                Log.d(TAG, "onNext: " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete");
+            }
+        });
     }
 
     @SuppressLint("CheckResult")
     private void test15() {
+        Observable<BannerBean> observable1 = iwanandroidApi.getBannerInfo().subscribeOn(Schedulers.io());
+        Observable<PopularInfoBean> observable2 = iwanandroidApi.getPopularInfo().subscribeOn(Schedulers.io());
+        Observable.zip(observable1, observable2, new BiFunction<BannerBean, PopularInfoBean, String>() {
+            @Override
+            public String apply(BannerBean bannerBean, PopularInfoBean popularInfoBean) throws Exception {
+                String res = "";
+                if(bannerBean != null && popularInfoBean != null){
+                    res = bannerBean.getData().get(0).getDesc() + popularInfoBean.getData().get(0).getName();
+                }
+                return res;
+            }
+        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                mTextView1.setText(s);
+            }
+        });
+    }
+
+    @SuppressLint("CheckResult")
+    private void test16() {
 
     }
 
+    @SuppressLint("CheckResult")
+    private void test17() {
+
+    }
+
+    @SuppressLint("CheckResult")
+    private void test18() {
+
+    }
+
+    @SuppressLint("CheckResult")
+    private void test19() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test20() {
+
+    }
 
 }
