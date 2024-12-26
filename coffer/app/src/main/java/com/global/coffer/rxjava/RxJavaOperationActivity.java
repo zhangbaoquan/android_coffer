@@ -12,10 +12,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.global.coffer.R;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -26,6 +34,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -58,10 +67,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * 13、flatMap并不保证事件的顺序,如果需要保证顺序则需要使用concatMap.
  * 14、使用flatMap 可以解决接口嵌套问题，例如在请求注册接口完成后，在请求登录接口
  * 15、Zip通过一个函数将多个Observable发送的事件结合到一起，然后发送这些组合到一起的事件.
- *  * 它按照严格的顺序应用这个函数。它只发射与发射数据项最少的那个Observable一样多的数据
+ * * 它按照严格的顺序应用这个函数。它只发射与发射数据项最少的那个Observable一样多的数据
  * 16、Zip 可以实现从两个服务器接口中获取数据, 而只有当两个都获取到了之后才能进行展示, 这个时候就可以用Zip了
- * 17、
- * 18、
+ * 17、当上下游工作在同一个线程中时, 这时候是一个同步的订阅关系, 也就是说上游每发送一个事件必须等到下游接收处理完了以后才能接着发送下一个事件.
+ * 18、当上下游工作在不同的线程中时, 这时候是一个异步的订阅关系, 这个时候上游发送数据不需要等待下游接收,
+ * 为什么呢, 因为两个线程并不能直接进行通信, 因此上游发送的事件并不能直接到下游里去。
  * 19、
  * 20、
  */
@@ -111,11 +121,20 @@ public class RxJavaOperationActivity extends AppCompatActivity {
 //        test11();
 //        test13();
 //        test14();
-        test16();
-        test17();
-        test18();
-        test19();
+//        test16();
+//        test17();
+//        test18();
+//        test19();
         test20();
+        test21();
+        test22();
+        test23();
+        test24();
+        test25();
+        test26();
+        test27();
+        test28();
+        test29();
 
     }
 
@@ -651,7 +670,7 @@ public class RxJavaOperationActivity extends AppCompatActivity {
             @Override
             public String apply(BannerBean bannerBean, PopularInfoBean popularInfoBean) throws Exception {
                 String res = "";
-                if(bannerBean != null && popularInfoBean != null){
+                if (bannerBean != null && popularInfoBean != null) {
                     res = bannerBean.getData().get(0).getDesc() + popularInfoBean.getData().get(0).getName();
                 }
                 return res;
@@ -664,27 +683,176 @@ public class RxJavaOperationActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 使用filter 过滤上游发的数据
+     */
     @SuppressLint("CheckResult")
     private void test16() {
-
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                        for (int i = 0; ; i++) {
+                            emitter.onNext(i);
+                        }
+                    }
+                }).subscribeOn(Schedulers.io())
+                .filter(new Predicate<Integer>() {
+                    @Override
+                    public boolean test(Integer integer) throws Exception {
+                        return integer % 10 == 0;
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) throws Exception {
+                        Log.d(TAG, "" + integer);
+                    }
+                });
     }
 
+    /**
+     * 使用sample 取样，让它每隔2秒取一个事件给下游
+     */
     @SuppressLint("CheckResult")
     private void test17() {
-
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                for (int i = 0;;i++){
+                    emitter.onNext(i);
+                }
+            }
+        }).subscribeOn(Schedulers.io())
+                .sample(2,TimeUnit.SECONDS)//sample取样
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+            @Override
+            public void accept(Integer integer) throws Exception {
+                Log.d(TAG, "" + integer);
+            }
+        });
     }
 
+    /**
+     * 既然上游发送事件的速度太快, 那我们就适当减慢发送事件的速度, 从速度上取胜。我们给上游加上延时了之后
+     * 内存即不会暴涨导致OOM，上游的事件数据也没有丢失。
+     */
     @SuppressLint("CheckResult")
     private void test18() {
-
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                        for (int i = 0;;i++){
+                            emitter.onNext(i);
+                            //每次发送完事件延时2秒
+                            Thread.sleep(2);
+                        }
+                    }
+                }).subscribeOn(Schedulers.io())
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) throws Exception {
+                        Log.d(TAG, "" + integer);
+                    }
+                });
     }
 
+    /**
+     * 使用Flowable 创建上游，使用Subscriber 创建下游。
+     * Flowable在设计的时候采用了一种新的思路也就是响应式拉取的方式来更好的解决上下游流速不均衡的问题
+     *
+     * 在下游的onSubscribe方法中传给我们的不再是Disposable了, 而是Subscription,
+     * 它俩有什么区别呢, 首先它们都是上下游中间的一个开关, 之前我们说调用Disposable.dispose()方法可以切断水管,
+     * 同样的调用Subscription.cancel()也可以切断水管, 不同的地方在于Subscription增加了一个void request(long n)方法。
+     *
+     * request当做是一种能力, 当成下游处理事件的能力, 下游能处理几个就告诉上游我要几个,
+     * 这样只要上游根据下游的处理能力来决定发送多少事件, 就不会造成一窝蜂的发出一堆事件来,
+     * 从而导致OOM. 这也就完美的解决之前我们所学到的两种方式的缺陷, 过滤事件会导致事件丢失, 减速又可能导致性能损失.
+     * 而这种方式既解决了事件丢失的问题, 又解决了速度的问题, 完美 !
+     *
+     * 这里需要注意的是, 只有当上游正确的实现了如何根据下游的处理能力来发送事件的时候, 才能达到这种效果,
+     * 如果上游根本不管下游的处理能力, 一股脑的瞎他妈发事件, 仍然会产生上下游流速不均衡的问题,
+     */
     @SuppressLint("CheckResult")
     private void test19() {
+        Flowable<Integer> upstream = Flowable.create(new FlowableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+                Log.d(TAG, "emit complete");
+                emitter.onComplete();
+            }
+        }, BackpressureStrategy.ERROR); // BackpressureStrategy 这里是设置背压策略
+
+        Subscriber<Integer> downstream = new Subscriber<Integer>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                Log.d(TAG, "onSubscribe");
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                Log.d(TAG, "onNext: " + integer);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                Log.w(TAG, "onError: ", t);
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete");
+            }
+        };
+        upstream.subscribe(downstream);
+    }
+
+    @SuppressLint("CheckResult")
+    private void test20() {
 
     }
     @SuppressLint("CheckResult")
-    private void test20() {
+    private void test21() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test22() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test23() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test24() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test25() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test26() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test27() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test28() {
+
+    }
+    @SuppressLint("CheckResult")
+    private void test29() {
 
     }
 
